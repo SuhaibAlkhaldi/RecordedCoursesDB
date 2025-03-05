@@ -1,0 +1,21 @@
+1-Retrieve Courses by Category
+
+SELECT TITLE,Price,Rate
+FROM COURSES
+where Category = 'Security';
+
+
+
+2-Search Courses 
+
+SELECT * FROM Courses 
+WHERE TITLE LIKE '%Python%' OR [DESCRIPTION] LIKE '%Python%';
+
+
+
+
+3-Track Learner Progress
+
+SELECT e.Progress , e.Completion_Status
+from Enrollments as e , COURSES as c , LEARNERS as l
+where e.CourseID = c.COURSEID AND e.LearnerID = l.LearnerID

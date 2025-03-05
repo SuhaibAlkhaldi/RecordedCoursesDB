@@ -1,0 +1,36 @@
+1-Active Courses View
+
+CREATE VIEW ActiveCourses AS
+SELECT c.Status ,c.category ,  u.Name AS InstructorName , COUNT(e.EnrollmentID) as TotalEnrollment
+from Courses as c JOIN Enrollments as e on c.CourseID = e.CourseID
+JOIN Instructors as i on i.InstructorID = e.InstructorID
+JOIN Users as u on u.UserID = i.UserID
+WHERE c.Status = 'Uncomplete'
+GROUP BY c.Status, c.category, u.Name;
+
+
+
+
+
+
+
+2-Learner Progress View
+
+CREATE VIEW LearnerProgress	AS
+Select e.Progress, u.Name , c.Title , c.Description , c.Category
+FROM Enrollments as e ,
+COURSES as c , Learners as l , Users as u
+where l.LearnerID = c.LearnerID
+
+
+
+
+3-Revenue Summary View:
+
+CREATE VIEW RevenueSummary AS 
+SELECT sp.PlanType , sp.Price , i.Specialization
+from SubscriptionPlans as sp
+JOIN CourseSubscriptionPlans as csp on csp.ID = sp.SubscriptionPlansID
+JOIN Courses as c on c.CourseID = csp.CourseID
+JOIN InstructorCourses as ic on ic.CourseID = c.CourseID
+JOIN Instructors as i on i.InstructorID = ic.InstructorID

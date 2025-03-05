@@ -1,0 +1,801 @@
+-- 1)Create DataBase
+CREATE DATABASE RecordedCoursesSystem
+
+-- 2)Create Tables
+CREATE TABLE USERS (
+USERID INT PRIMARY KEY IDENTITY(1,1),
+[Name] VARCHAR(50) NOT NULL,
+EMAIL VARCHAR(100) UNIQUE CHECK (EMAIL LIKE '%_@_%._%'), 
+[Password] VARCHAR(16) NOT NULL CHECK (
+[Password] LIKE '%[A-Z]%'  
+AND [Password] LIKE '%[a-z]%' 
+AND [Password] LIKE '%[0-9]%'  
+AND [Password] LIKE '%[!@#$%^&*(),.?":{}|<>]%'  
+),
+BIO VARCHAR(MAX) NOT NULL,
+PhoneNumber VARCHAR(10) NOT NULL UNIQUE CHECK (PhoneNumber LIKE '07%' AND LEN(PhoneNumber) = 10),
+ProfileImage VARCHAR(MAX) NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0
+);
+
+
+CREATE TABLE LEARNERS
+(LearnerID INT PRIMARY KEY IDENTITY(1,1),
+USERID INT NOT NULL,
+Certification VARCHAR(50) not null,
+Nationality varchar(20) default 'Jordanian',
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (USERID) REFERENCES Users(USERID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Instructors
+(InstructorID INT PRIMARY KEY IDENTITY(1,1),
+USERID INT NOT NULL,
+Salary float not null,
+Rate Float not null check (Rate Between 1 AND 5),
+Specialization varchar(50) ,
+ExperienceYears float not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (USERID) REFERENCES Users(USERID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Admins
+(AdminID INT PRIMARY KEY IDENTITY(1,1),
+[Name] varchar(50) not null,
+EMAIL VARCHAR(100) UNIQUE CHECK (EMAIL LIKE '%_@_%._%'), 
+[Password] VARCHAR(16) NOT NULL CHECK (
+[Password] LIKE '%[A-Z]%'  
+AND [Password] LIKE '%[a-z]%' 
+AND [Password] LIKE '%[0-9]%'  
+AND [Password] LIKE '%[!@#$%^&*(),.?":{}|<>]%'  
+),
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0
+);
+
+
+
+CREATE TABLE COURSES	
+(COURSEID INT PRIMARY KEY IDENTITY(1,1),
+LearnerID int not null,
+AdminID int not null,
+TITLE VARCHAR(50) NOT NULL,
+[DESCRIPTION] VARCHAR(MAX) NOT NULL,
+Category VARCHAR(50) NOT NULL,
+[Level] INT Check (Level > 0),
+Price FLOAT check (Price >100),
+Discount FLOAT Default 0,
+Total_Duration DateTime Default GetDate(),
+[Status] varchar(50) Default 'UnComplete',
+Rate Float not null check (Rate Between 1 AND 5),
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE,
+FOREIGN KEY (AdminID) REFERENCES Admins(AdminID) ON DELETE CASCADE
+);
+
+CREATE TABLE Reviews
+(ReviewID INT PRIMARY KEY IDENTITY(1,1),
+Rate Float not null CHECK (Rate >= 1 AND Rate <= 5),
+[Message] varchar(max) not null,
+ReviewDate DateTime default GETDATE(),
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ,
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) 
+);
+
+
+CREATE TABLE SubscriptionPlans
+(SubscriptionPlansID INT PRIMARY KEY IDENTITY(1,1),
+PlanType varchar(20) not null default 'Basic',
+Price float check (Price > 100),
+[Status] varchar(50) default 'Active',
+AdminID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (AdminID) REFERENCES Admins(AdminID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Enrollments
+(EnrollmentID INT PRIMARY KEY IDENTITY(1,1),
+Progress varchar(10) not null check (Progress Like '_%[%]'),
+EnrollmentDate DateTime Default GetDate(),
+Completion_Status varchar(20) default 'In Progress',
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID),
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) 
+);
+
+
+CREATE TABLE Payments
+(PaymentID INT PRIMARY KEY IDENTITY(1,1),
+PaymentDate DateTime not null Default GetDate(),
+IsPaid Bit not null Default 0,
+Amount Float Check (Amount > 0),
+LearnerID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Lessons
+(LessonID int Primary key Identity(1,1),
+VideoFile VARBINARY(255) UNIQUE,
+Title varchar(100) not null,
+Duration varchar(50) CHECK (Duration LIKE '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'),
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID),
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID)
+);
+
+
+
+
+CREATE TABLE BookMarks
+(BookMarkID int Primary key Identity(1,1),
+CreatedAt DateTime Default GetDate(),
+LearnerID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE InstructorCourses
+(ID int Primary Key Identity(1,1),
+InstructorID int not null,
+CourseID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+
+CREATE TABLE BookMarkCourses 
+(ID INT PRIMARY KEY IDENTITY(1,1),
+BookMarkID INT NOT NULL,
+CourseID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (BookMarkID) REFERENCES BookMarks(BookMarkID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+
+
+CREATE TABLE CourseSubscriptionPlans 
+(ID INT PRIMARY KEY IDENTITY(1,1),
+SubscriptionPlansID INT NOT NULL,
+CourseID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (SubscriptionPlansID) REFERENCES SubscriptionPlans(SubscriptionPlansID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+
+
+
+
+
+INSERT INTO USERS ([Name], EMAIL, [Password], BIO, PhoneNumber, ProfileImage, CreatedBy)
+VALUES 
+('John Doe', 'john.doe@example.com', 'Abc123!@#', 'Passionate educator in programming.', '0712345678', 'profile1.jpg', 'System'),
+('Jane Smith', 'jane.smith@example.com', 'Xyz456@!$', 'AI researcher and instructor.', '0798765432', 'profile2.jpg', 'Admin'),
+('Michael Brown', 'michael.brown@example.com', 'P@ssword789!', 'Data scientist with 10+ years experience.', '0781234567', 'profile3.jpg', 'System'),
+('Alice Johnson', 'alice.johnson@example.com', 'Alice@2023!', 'Machine Learning specialist.', '0745678123', 'profile4.jpg', 'Admin'),
+('David Wilson', 'david.wilson@example.com', 'Dav!d0987A', 'Cybersecurity expert.', '0723456789', 'profile5.jpg', 'Admin'),
+('Sarah Miller', 'sarah.miller@example.com', 'S@rahM12$', 'Lifelong learner and educator.', '0711112233', 'profile6.jpg', 'System'),
+('Chris Anderson', 'chris.anderson@example.com', 'Chris#900@A', 'Backend developer and instructor.', '0792223344', 'profile7.jpg', 'Admin'),
+('Jessica Thomas', 'jessica.thomas@example.com', 'J3ssi!ca$1A', 'Data analytics enthusiast.', '0745566778', 'profile8.jpg', 'System'),
+('Daniel Martinez', 'daniel.martinez@example.com', 'D@nny456!B', 'Python and Django expert.', '0788889999', 'profile9.jpg', 'Admin'),
+('Laura Hernandez', 'laura.hernandez@example.com', 'Laura*2024C', 'Instructor in mobile app development.', '0777778888', 'profile10.jpg', 'System'),
+('James White', 'james.white@example.com', 'J@mesW10!D', 'Cloud computing and AWS specialist.', '0766667777', 'profile11.jpg', 'Admin'),
+('Sophia Lee', 'sophia.lee@example.com', 'Sophi@L33!E', 'Passionate about software engineering.', '0755556666', 'profile12.jpg', 'Admin'),
+('Matthew Harris', 'matthew.harris@example.com', 'M@ttH2023!F', 'Java and Kotlin instructor.', '0733334444', 'profile13.jpg', 'System'),
+('Olivia Clark', 'olivia.clark@example.com', 'Olivi@C09!G', 'AI-powered automation expert.', '0712341111', 'profile14.jpg', 'Admin'),
+('Ethan Lewis', 'ethan.lewis@example.com', 'Eth@nL321!H', 'Frontend development mentor.', '0722223333', 'profile15.jpg', 'System'),
+('Isabella Young', 'isabella.young@example.com', 'Is@bell4!I', 'UI/UX design and user experience instructor.', '0799998888', 'profile16.jpg', 'Admin'),
+('Benjamin Walker', 'benjamin.walker@example.com', 'Ben#w@lker!2', 'Game development expert.', '0744445555', 'profile17.jpg', 'System'),
+('Charlotte Hall', 'charlotte.hall@example.com', 'Charlott@2!K', 'Instructor in cybersecurity.', '0777776666', 'profile18.jpg', 'Admin'),
+('Alexander Allen', 'alexander.allen@example.com', 'Al3xAndr!L', 'Blockchain and fintech instructor.', '0754321098', 'profile19.jpg', 'System'),
+('Emily Scott', 'emily.scott@example.com', 'Emily$987!M', 'IoT and hardware programming specialist.', '0765432109', 'profile20.jpg', 'Admin'),
+('Mason Adams', 'mason.adams@example.com', 'M@sonA123!N', 'Instructor in SQL and database design.', '0789012345', 'profile21.jpg', 'System'),
+('Ava Nelson', 'ava.nelson@example.com', 'Av@Nels0n!O', 'AI-driven chatbots and NLP.', '0711122334', 'profile22.jpg', 'Admin'),
+('Logan Carter', 'logan.carter@example.com', 'L0g@nC#!P', 'Full-stack JavaScript developer.', '0798765431', 'profile23.jpg', 'System'),
+('Grace Mitchell', 'grace.mitchell@example.com', 'Gr@ceM2tch!Q', 'Educator in software testing and QA.', '0743210987', 'profile24.jpg', 'Admin'),
+('Henry Parker', 'henry.parker@example.com', 'HenryP#456!R', 'Cybersecurity and ethical hacking expert.', '0732109876', 'profile25.jpg', 'System');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO LEARNERS (USERID, Certification, Nationality, CreatedBy) 
+VALUES
+(111, 'Full Stack Development', 'Jordanian', 'Admin'),
+(112, 'Machine Learning Specialist', 'American', 'Admin'),
+(113, 'Data Science Certification', 'Jordanian', 'Admin'),
+(114, 'Cybersecurity Analyst', 'Canadian', 'Admin'),
+(115, 'AWS Cloud Practitioner', 'Jordanian', 'Admin'),
+(116, 'Google Cloud Associate', 'British', 'Admin'),
+(117, 'AI & Deep Learning', 'Jordanian', 'Admin'),
+(118, 'UI/UX Design Masterclass', 'Australian', 'Admin'),
+(119, 'Blockchain Developer', 'French', 'Admin'),
+(120, 'Python for Data Analysis', 'Jordanian', 'Admin'),
+(121, 'Big Data Engineering', 'Spanish', 'Admin'),
+(122, 'Software Engineering', 'Japanese', 'Admin'),
+(123, 'Mobile App Development', 'Jordanian', 'Admin'),
+(124, 'Game Development', 'German', 'Admin'),
+(125, 'Android Kotlin Developer', 'Jordanian', 'Admin'),
+(126, 'Penetration Testing', 'Norwegian', 'Admin'),
+(127, 'Cyber Threat Intelligence', 'Jordanian', 'Admin'),
+(128, 'Digital Marketing', 'Russian', 'Admin'),
+(129, 'Network Security', 'Jordanian', 'Admin'),
+(130, 'Embedded Systems', 'Indian', 'Admin'),
+(131, 'SQL & Database Design', 'Jordanian', 'Admin'),
+(132, 'Ethical Hacking', 'Turkish', 'Admin'),
+(133, 'React Native Developer', 'Jordanian', 'Admin'),
+(134, 'AR/VR Development', 'Mexican', 'Admin'),
+(135, 'Financial Analysis', 'Jordanian', 'Admin'),
+(111, 'Certified Data Analyst', 'American', 'Admin'),
+(112, 'AWS Certified Solutions Architect', 'British', 'Admin'),
+(113, 'Google IT Support Professional', 'Canadian', 'Admin'),
+(114, 'Microsoft Azure Fundamentals', 'Indian', 'Admin'),
+(115, 'Cisco CCNA', 'German', 'Admin'),
+(116, 'CompTIA Security+', 'French', 'Admin'),
+(117, 'Certified Ethical Hacker', 'Australian', 'Admin'),
+(118, 'PMP Certification', 'Japanese', 'Admin'),
+(119, 'Six Sigma Green Belt', 'Brazilian', 'Admin'),
+(120, 'Scrum Master Certification', 'Mexican', 'Admin'),
+(121, 'Machine Learning Certification', 'South African', 'Admin'),
+(122, 'Python for Data Science', 'Spanish', 'Admin'),
+(123, 'Java Programming Certification', 'Russian', 'Admin'),
+(124, 'Full Stack Web Developer', 'Turkish', 'Admin'),
+(125, 'Blockchain Developer Certification', 'Italian', 'Admin'),
+(126, 'Cybersecurity Specialist', 'Dutch', 'Admin'),
+(127, 'Google Cloud Certified', 'Norwegian', 'Admin'),
+(128, 'Oracle Database Administrator', 'Chinese', 'Admin'),
+(129, 'Data Science with R', 'Korean', 'Admin'),
+(130, 'Kubernetes Administrator', 'Portuguese', 'Admin'),
+(131, 'Digital Marketing Certification', 'Swedish', 'Admin'),
+(132, 'UX/UI Design Professional', 'Finnish', 'Admin'),
+(133, 'AI and Deep Learning Certification', 'Greek', 'Admin'),
+(134, 'Agile Project Management', 'Egyptian', 'Admin'),
+(135, 'Penetration Testing Professional', 'Argentinian', 'Admin');
+
+
+
+
+
+INSERT INTO Instructors (USERID, Salary, Rate, Specialization, ExperienceYears, CreatedBy, ISACTIVE) 
+VALUES
+(111, 5000.00, 4.5, 'Data Science', 7, 'Admin', 1),
+(112, 6000.50, 4.7, 'Cybersecurity', 10, 'Admin', 1),
+(113, 4800.00, 4.2, 'Machine Learning', 5, 'Admin', 1),
+(114, 7000.00, 5.0, 'Cloud Computing', 12, 'Admin', 1),
+(115, 5500.75, 3.8, 'Software Engineering', 8, 'Admin', 1),
+(116, 6200.00, 4.6, 'UI/UX Design', 9, 'Admin', 1),
+(117, 5900.20, 4.1, 'Blockchain Development', 6, 'Admin', 1),
+(118, 5300.00, 3.9, 'Python Programming', 7, 'Admin', 1),
+(119, 5800.00, 4.8, 'Mobile App Development', 11, 'Admin', 1),
+(120, 6500.30, 4.0, 'Big Data Analytics', 10, 'Admin', 1),
+(121, 6200.00, 4.3, 'DevOps Engineering', 9, 'Admin', 1),
+(122, 5400.00, 3.7, 'Game Development', 6, 'Admin', 1),
+(123, 5000.00, 4.9, 'AI & Deep Learning', 7, 'Admin', 1),
+(124, 6800.40, 4.4, 'Database Administration', 10, 'Admin', 1),
+(125, 5600.00, 4.2, 'Cybersecurity & Ethical Hacking', 8, 'Admin', 1),
+(126, 6300.50, 3.6, 'Network Security', 9, 'Admin', 1),
+(127, 4900.00, 4.0, 'Web Development', 6, 'Admin', 1),
+(128, 7100.00, 4.5, 'Agile Project Management', 12, 'Admin', 1),
+(129, 6000.00, 3.9, 'Embedded Systems', 7, 'Admin', 1),
+(130, 6700.80, 4.7, 'Kubernetes & Docker', 11, 'Admin', 1),
+(131, 5800.00, 4.3, 'React & Frontend Development', 8, 'Admin', 1),
+(132, 5500.00, 3.8, 'SEO & Digital Marketing', 6, 'Admin', 1),
+(133, 7000.50, 4.6, 'Penetration Testing', 10, 'Admin', 1),
+(134, 6400.00, 4.1, 'AWS & Cloud Solutions', 9, 'Admin', 1),
+(135, 5700.00, 4.4, 'Full Stack Development', 7, 'Admin', 1);
+
+
+
+
+INSERT INTO Admins ([Name], EMAIL, [Password], CreatedBy, ISACTIVE)
+VALUES
+('Alice Johnson', 'alice.johnson@example.com', 'Admin@1234!', 'System', 1),
+('Bob Smith', 'bob.smith@example.com', 'Secure#Pass1', 'System', 1),
+('Charlie Davis', 'charlie.davis@example.com', 'Pass@word99', 'System', 1),
+('David Brown', 'david.brown@example.com', 'Strong&Key7', 'System', 1),
+('Emily White', 'emily.white@example.com', 'Key@Safe2024', 'System', 1),
+('Frank Martin', 'frank.martin@example.com', 'Martin@456!', 'System', 1),
+('Grace Wilson', 'grace.wilson@example.com', 'Wilson$89$', 'System', 1),
+('Henry Evans', 'henry.evans@example.com', 'Secure@Evans1', 'System', 1),
+('Ivy Carter', 'ivy.carter@example.com', 'Carter@2024#', 'System', 1),
+('Jack Green', 'jack.green@example.com', 'Jack&Pass77', 'System', 1),
+('Karen Lee', 'karen.lee@example.com', 'Karen#Pass88', 'System', 1),
+('Liam Harris', 'liam.harris@example.com', 'Harris@Secure9', 'System', 1),
+('Mia Scott', 'mia.scott@example.com', 'Scott$Pass10', 'System', 1),
+('Noah Adams', 'noah.adams@example.com', 'Adams&Strong1', 'System', 1),
+('Olivia Baker', 'olivia.baker@example.com', 'Olivia@Pass12', 'System', 1),
+('Peter Young', 'peter.young@example.com', 'Young#Secure13', 'System', 1),
+('Quinn Walker', 'quinn.walker@example.com', 'Walker@Pass14', 'System', 1),
+('Rachel Clark', 'rachel.clark@example.com', 'Clark$Pass15', 'System', 1),
+('Samuel Hall', 'samuel.hall@example.com', 'Hall&Secure16', 'System', 1),
+('Tina Allen', 'tina.allen@example.com', 'Allen@Pass17', 'System', 1),
+('Umar White', 'umar.white@example.com', 'White#Pass18', 'System', 1),
+('Victor Lewis', 'victor.lewis@example.com', 'Lewis@Secure19', 'System', 1),
+('Wendy King', 'wendy.king@example.com', 'King$Pass20', 'System', 1),
+('Xavier Reed', 'xavier.reed@example.com', 'Reed&Pass21', 'System', 1),
+('Yara Parker', 'yara.parker@example.com', 'Parker@Pass22', 'System', 1);
+
+
+
+
+
+INSERT INTO COURSES (LearnerID, AdminID, TITLE, [DESCRIPTION], Category, [Level], Price, Discount, Rate, CreatedBy, ISACTIVE)
+VALUES
+(7, 1, 'Python for Beginners', 'Learn Python from scratch', 'Programming', 1, 120.00, 10, 4.5, 'Admin', 1),
+(8, 2, 'Web Development Bootcamp', 'Full-stack web development', 'Development', 2, 150.00, 5, 4.7, 'Admin', 1),
+(9, 3, 'Data Science with R', 'Data analysis and visualization with R', 'Data Science', 3, 200.00, 15, 4.6, 'Admin', 1),
+(10, 4, 'Machine Learning A-Z', 'Guide to ML algorithms', 'AI & Machine Learning', 4, 300.00, 20, 4.8, 'Admin', 1),
+(11, 5, 'Cybersecurity Fundamentals', 'Basics of cybersecurity and hacking', 'Security', 2, 180.00, 10, 4.4, 'Admin', 1),
+(12, 6, 'AWS Cloud Practitioner', 'AWS cloud computing certification', 'Cloud Computing', 1, 220.00, 10, 4.5, 'Admin', 1),
+(13, 7, 'React.js for Beginners', 'Front-end development with React', 'Development', 2, 130.00, 5, 4.6, 'Admin', 1),
+(14, 8, 'Blockchain Essentials', 'Intro to blockchain technology', 'Blockchain', 3, 250.00, 15, 4.7, 'Admin', 1),
+(15, 9, 'SQL for Data Analysis', 'Using SQL for business analysis', 'Database', 2, 140.00, 10, 4.5, 'Admin', 1),
+(16, 10, 'Kubernetes for Beginners', 'Orchestration with Kubernetes', 'DevOps', 3, 190.00, 5, 4.6, 'Admin', 1),
+(17, 11, 'Agile Project Management', 'Agile methodologies for project management', 'Management', 1, 160.00, 5, 4.4, 'Admin', 1),
+(18, 12, 'Google Cloud Certification', 'Cloud computing with Google Cloud', 'Cloud Computing', 3, 230.00, 10, 4.7, 'Admin', 1),
+(19, 13, 'Java Programming Masterclass', 'Complete guide to Java development', 'Programming', 2, 180.00, 15, 4.6, 'Admin', 1),
+(20, 14, 'Ethical Hacking', 'Learn penetration testing', 'Security', 4, 270.00, 20, 4.8, 'Admin', 1),
+(21, 15, 'Digital Marketing Essentials', 'Online marketing strategies', 'Marketing', 1, 150.00, 5, 4.5, 'Admin', 1),
+(22, 16, 'UX/UI Design Bootcamp', 'Principles of user experience and interface design', 'Design', 2, 170.00, 10, 4.6, 'Admin', 1),
+(23, 17, 'Full Stack Web Development', 'End-to-end web development', 'Development', 3, 210.00, 15, 4.7, 'Admin', 1),
+(24, 18, 'AI and Deep Learning', 'Advanced AI techniques', 'AI & Machine Learning', 4, 320.00, 20, 4.9, 'Admin', 1),
+(25, 19, 'Microsoft Azure Fundamentals', 'Cloud computing with Azure', 'Cloud Computing', 1, 200.00, 10, 4.5, 'Admin', 1),
+(26, 20, 'Cybersecurity Analyst', 'Threat analysis and defense', 'Security', 3, 260.00, 15, 4.7, 'Admin', 1),
+(27, 21, 'Penetration Testing Professional', 'Advanced penetration testing', 'Security', 4, 280.00, 10, 4.8, 'Admin', 1),
+(28, 22, 'CompTIA Security+', 'Security certification prep', 'Security', 2, 220.00, 10, 4.6, 'Admin', 1),
+(29, 23, 'Scrum Master Certification', 'Agile Scrum framework', 'Management', 1, 140.00, 5, 4.4, 'Admin', 1),
+(30, 24, 'Oracle Database Administration', 'Managing Oracle databases', 'Database', 3, 240.00, 15, 4.7, 'Admin', 1),
+(31, 25, 'Six Sigma Green Belt', 'Process improvement techniques', 'Management', 2, 180.00, 10, 4.5, 'Admin', 1),
+(32, 1, 'Python for Data Science', 'Data Science with Python', 'Data Science', 2, 190.00, 5, 4.6, 'Admin', 1),
+(33, 2, 'Android App Development', 'Build apps with Java and Kotlin', 'Programming', 3, 200.00, 10, 4.5, 'Admin', 1),
+(34, 3, 'DevOps Fundamentals', 'CI/CD pipelines and automation', 'DevOps', 2, 230.00, 15, 4.6, 'Admin', 1),
+(35, 4, 'Google IT Support', 'IT support fundamentals', 'IT & Support', 1, 150.00, 5, 4.4, 'Admin', 1),
+(36, 5, 'Cloud Security Essentials', 'Cloud security best practices', 'Security', 3, 260.00, 10, 4.7, 'Admin', 1),
+(37, 6, 'Internet of Things (IoT)', 'IoT technology overview', 'Technology', 2, 210.00, 15, 4.6, 'Admin', 1),
+(38, 7, 'Game Development with Unity', 'Building games with Unity', 'Game Development', 3, 270.00, 20, 4.8, 'Admin', 1),
+(39, 8, 'Penetration Testing Advanced', 'Advanced hacking techniques', 'Security', 4, 290.00, 10, 4.9, 'Admin', 1),
+(40, 9, 'AI in Finance', 'AI applications in financial analysis', 'AI & Machine Learning', 3, 280.00, 15, 4.7, 'Admin', 1),
+(41, 10, 'Big Data Analytics', 'Working with large-scale data', 'Data Science', 4, 300.00, 20, 4.8, 'Admin', 1),
+(42, 11, 'Linux Administration', 'Managing Linux systems', 'IT & Support', 2, 190.00, 10, 4.5, 'Admin', 1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO Reviews (Rate, [Message], CourseID, LearnerID, InstructorID, CreatedBy, ISACTIVE)
+VALUES
+(4.5, 'Great course!', 5, 10, 3, 'Admin', 1),
+(3.0, 'Could be improved.', 6, 15, 7, 'Admin', 1),
+(5.0, 'Excellent teaching method.', 8, 20, 10, 'Admin', 1),
+(4.0, 'Very informative.', 9, 12, 5, 'Admin', 1),
+(4.7, 'Helpful content.', 12, 30, 9, 'Admin', 1),
+(3.8, 'Decent but needs more exercises.', 14, 25, 2, 'Admin', 1),
+(5.0, 'Absolutely loved it!', 17, 35, 12, 'Admin', 1),
+(2.5, 'Too basic.', 19, 40, 15, 'Admin', 1),
+(4.2, 'Good value for money.', 20, 50, 6, 'Admin', 1),
+(3.6, 'Average experience.', 21, 45, 8, 'Admin', 1),
+(5.0, 'Highly recommend.', 22, 48, 11, 'Admin', 1),
+(4.4, 'Great examples provided.', 24, 28, 4, 'Admin', 1),
+(3.9, 'Nice but slow-paced.', 25, 18, 14, 'Admin', 1),
+(4.8, 'Well-structured.', 27, 32, 20, 'Admin', 1),
+(4.1, 'Engaging lessons.', 29, 55, 13, 'Admin', 1),
+(3.7, 'More quizzes would help.', 30, 42, 17, 'Admin', 1),
+(4.5, 'Helpful for beginners.', 31, 21, 19, 'Admin', 1),
+(2.8, 'Not what I expected.', 32, 8, 25, 'Admin', 1),
+(4.9, 'Best course ever!', 34, 11, 23, 'Admin', 1),
+(3.2, 'Missing some key concepts.', 35, 9, 18, 'Admin', 1),
+(4.6, 'Fantastic explanations.', 36, 26, 16, 'Admin', 1),
+(3.5, 'Could be more interactive.', 37, 51, 22, 'Admin', 1),
+(5.0, 'Instructor is amazing!', 38, 33, 1, 'Admin', 1),
+(4.3, 'Very well explained.', 39, 47, 21, 'Admin', 1),
+(3.1, 'Decent but not engaging.', 4, 13, 24, 'Admin', 1);
+
+
+
+
+
+
+INSERT INTO SubscriptionPlans (PlanType, Price, AdminID, CreatedBy, ISACTIVE)
+VALUES
+('Basic', 150.0, 1, 'Admin', 1),
+('Standard', 200.0, 2, 'Admin', 1),
+('Premium', 300.0, 3, 'Admin', 1),
+('Enterprise', 500.0, 4, 'Admin', 1),
+('Basic', 120.0, 5, 'Admin', 1),
+('Standard', 250.0, 6, 'Admin', 1),
+('Premium', 350.0, 7, 'Admin', 1),
+('Enterprise', 600.0, 8, 'Admin', 1),
+('Basic', 130.0, 9, 'Admin', 1),
+('Standard', 220.0, 10, 'Admin', 1),
+('Premium', 330.0, 11, 'Admin', 1),
+('Enterprise', 550.0, 12, 'Admin', 1),
+('Basic', 140.0, 13, 'Admin', 1),
+('Standard', 230.0, 14, 'Admin', 1),
+('Premium', 360.0, 15, 'Admin', 1),
+('Enterprise', 580.0, 16, 'Admin', 1),
+('Basic', 160.0, 17, 'Admin', 1),
+('Standard', 270.0, 18, 'Admin', 1),
+('Premium', 390.0, 19, 'Admin', 1),
+('Enterprise', 620.0, 20, 'Admin', 1),
+('Basic', 180.0, 21, 'Admin', 1),
+('Standard', 290.0, 22, 'Admin', 1),
+('Premium', 410.0, 23, 'Admin', 1),
+('Enterprise', 650.0, 24, 'Admin', 1),
+('Basic', 190.0, 25, 'Admin', 1);
+
+
+
+
+
+INSERT INTO Enrollments (Progress, CourseID, LearnerID, InstructorID, CreatedBy, ISACTIVE)
+VALUES
+('10%', 4, 7, 1, 'Admin', 1),
+('20%', 5, 8, 2, 'Admin', 1),
+('30%', 6, 9, 3, 'Admin', 1),
+('40%', 7, 10, 4, 'Admin', 1),
+('50%', 8, 11, 5, 'Admin', 1),
+('60%', 9, 12, 6, 'Admin', 1),
+('70%', 10, 13, 7, 'Admin', 1),
+('80%', 11, 14, 8, 'Admin', 1),
+('90%', 12, 15, 9, 'Admin', 1),
+('100%', 13, 16, 10, 'Admin', 1),
+('10%', 14, 17, 11, 'Admin', 1),
+('20%', 15, 18, 12, 'Admin', 1),
+('30%', 16, 19, 13, 'Admin', 1),
+('40%', 17, 20, 14, 'Admin', 1),
+('50%', 18, 21, 15, 'Admin', 1),
+('60%', 19, 22, 16, 'Admin', 1),
+('70%', 20, 23, 17, 'Admin', 1),
+('80%', 21, 24, 18, 'Admin', 1),
+('90%', 22, 25, 19, 'Admin', 1),
+('100%', 23, 26, 20, 'Admin', 1),
+('10%', 24, 27, 21, 'Admin', 1),
+('20%', 25, 28, 22, 'Admin', 1),
+('30%', 26, 29, 23, 'Admin', 1),
+('40%', 27, 30, 24, 'Admin', 1),
+('50%', 28, 31, 25, 'Admin', 1);
+
+
+
+
+
+
+
+INSERT INTO Payments (IsPaid, Amount, LearnerID, CreatedBy, ISACTIVE)
+VALUES
+(1, 150.00, 7, 'Admin', 1),
+(1, 200.00, 8, 'Admin', 1),
+(0, 120.50, 9, 'Admin', 1),
+(1, 300.75, 10, 'Admin', 1),
+(0, 250.25, 11, 'Admin', 1),
+(1, 180.00, 12, 'Admin', 1),
+(0, 190.00, 13, 'Admin', 1),
+(1, 275.50, 14, 'Admin', 1),
+(1, 310.00, 15, 'Admin', 1),
+(0, 135.75, 16, 'Admin', 1),
+(1, 400.00, 17, 'Admin', 1),
+(1, 145.50, 18, 'Admin', 1),
+(0, 160.00, 19, 'Admin', 1),
+(1, 215.25, 20, 'Admin', 1),
+(1, 275.75, 21, 'Admin', 1),
+(0, 320.00, 22, 'Admin', 1),
+(1, 195.00, 23, 'Admin', 1),
+(0, 250.00, 24, 'Admin', 1),
+(1, 345.25, 25, 'Admin', 1),
+(1, 410.00, 26, 'Admin', 1),
+(0, 180.75, 27, 'Admin', 1),
+(1, 225.00, 28, 'Admin', 1),
+(1, 290.00, 29, 'Admin', 1),
+(0, 310.50, 30, 'Admin', 1),
+(1, 375.00, 31, 'Admin', 1);
+
+
+
+
+
+
+
+
+
+INSERT INTO Lessons (VideoFile, Title, Duration, CourseID, LearnerID, InstructorID, CreatedBy, ISACTIVE)
+VALUES
+(CONVERT(VARBINARY, 'video1.mp4'), 'Introduction to Python', '00:45:30', 4, 7, 1, 'Admin', 1),
+(CONVERT(VARBINARY, 'video2.mp4'), 'OOP in Java', '01:10:15', 5, 8, 2, 'Admin', 1),
+(CONVERT(VARBINARY, 'video3.mp4'), 'HTML & CSS Basics', '00:30:45', 6, 9, 3, 'Admin', 1),
+(CONVERT(VARBINARY, 'video4.mp4'), 'Advanced SQL Queries', '01:20:30', 7, 10, 4, 'Admin', 1),
+(CONVERT(VARBINARY, 'video5.mp4'), 'Machine Learning Overview', '01:45:20', 8, 11, 5, 'Admin', 1),
+(CONVERT(VARBINARY, 'video6.mp4'), 'Cybersecurity Essentials', '00:50:15', 9, 12, 6, 'Admin', 1),
+(CONVERT(VARBINARY, 'video7.mp4'), 'Data Structures in C++', '01:30:00', 10, 13, 7, 'Admin', 1),
+(CONVERT(VARBINARY, 'video8.mp4'), 'Django for Web Development', '00:40:30', 11, 14, 8, 'Admin', 1),
+(CONVERT(VARBINARY, 'video9.mp4'), 'React.js Basics', '01:15:45', 12, 15, 9, 'Admin', 1),
+(CONVERT(VARBINARY, 'video10.mp4'), 'Node.js & Express.js', '00:55:25', 13, 16, 10, 'Admin', 1),
+(CONVERT(VARBINARY, 'video11.mp4'), 'AWS Cloud Computing', '01:05:30', 14, 17, 11, 'Admin', 1),
+(CONVERT(VARBINARY, 'video12.mp4'), 'Blockchain Fundamentals', '00:50:00', 15, 18, 12, 'Admin', 1),
+(CONVERT(VARBINARY, 'video13.mp4'), 'UI/UX Design Principles', '01:20:10', 16, 19, 13, 'Admin', 1),
+(CONVERT(VARBINARY, 'video14.mp4'), 'Python for Data Science', '01:40:30', 17, 20, 14, 'Admin', 1),
+(CONVERT(VARBINARY, 'video15.mp4'), 'Mobile App Development', '00:35:20', 18, 21, 15, 'Admin', 1),
+(CONVERT(VARBINARY, 'video16.mp4'), 'Ethical Hacking Basics', '01:25:50', 19, 22, 16, 'Admin', 1),
+(CONVERT(VARBINARY, 'video17.mp4'), 'ASP.NET MVC Framework', '00:48:30', 20, 23, 17, 'Admin', 1),
+(CONVERT(VARBINARY, 'video18.mp4'), 'Google Firebase', '00:55:10', 21, 24, 18, 'Admin', 1),
+(CONVERT(VARBINARY, 'video19.mp4'), 'Docker & Kubernetes', '01:30:40', 22, 25, 19, 'Admin', 1),
+(CONVERT(VARBINARY, 'video20.mp4'), 'Cyber Threat Intelligence', '00:50:50', 23, 26, 20, 'Admin', 1),
+(CONVERT(VARBINARY, 'video21.mp4'), 'Linux System Administration', '01:15:00', 24, 27, 21, 'Admin', 1),
+(CONVERT(VARBINARY, 'video22.mp4'), 'Big Data Analytics', '01:35:25', 25, 28, 22, 'Admin', 1),
+(CONVERT(VARBINARY, 'video23.mp4'), 'Game Development with Unity', '01:10:15', 26, 29, 23, 'Admin', 1),
+(CONVERT(VARBINARY, 'video24.mp4'), 'Agile Project Management', '00:45:30', 27, 30, 24, 'Admin', 1),
+(CONVERT(VARBINARY, 'video25.mp4'), 'AI-Powered Chatbots', '01:20:30', 28, 31, 25, 'Admin', 1);
+
+
+
+
+INSERT INTO BookMarks (LearnerID, CreatedBy, ISACTIVE)
+VALUES
+(7, 'Admin', 1),
+(8, 'Admin', 1),
+(9, 'Admin', 1),
+(10, 'Admin', 1),
+(11, 'Admin', 1),
+(12, 'Admin', 1),
+(13, 'Admin', 1),
+(14, 'Admin', 1),
+(15, 'Admin', 1),
+(16, 'Admin', 1),
+(17, 'Admin', 1),
+(18, 'Admin', 1),
+(19, 'Admin', 1),
+(20, 'Admin', 1),
+(21, 'Admin', 1),
+(22, 'Admin', 1),
+(23, 'Admin', 1),
+(24, 'Admin', 1),
+(25, 'Admin', 1),
+(26, 'Admin', 1),
+(27, 'Admin', 1),
+(28, 'Admin', 1),
+(29, 'Admin', 1),
+(30, 'Admin', 1),
+(31, 'Admin', 1);
+
+
+
+
+
+
+
+
+1-Retrieve Courses by Category
+
+SELECT TITLE,Price,Rate
+FROM COURSES
+where Category = 'Security';
+
+
+
+2-Search Courses 
+
+SELECT * FROM Courses 
+WHERE TITLE LIKE '%Python%' OR [DESCRIPTION] LIKE '%Python%';
+
+
+
+
+3-Track Learner Progress
+
+SELECT e.Progress , e.Completion_Status
+from Enrollments as e , COURSES as c , LEARNERS as l
+where e.CourseID = c.COURSEID AND e.LearnerID = l.LearnerID
+
+
+
+
+
+CREATE VIEW ActiveCourses AS
+SELECT c.Status ,c.category ,  u.Name AS InstructorName , COUNT(e.EnrollmentID) as TotalEnrollment
+from Courses as c JOIN Enrollments as e on c.CourseID = e.CourseID
+JOIN Instructors as i on i.InstructorID = e.InstructorID
+JOIN Users as u on u.UserID = i.UserID
+WHERE c.Status = 'Uncomplete'
+GROUP BY c.Status, c.category, u.Name;
+
+
+
+
+
+
+
+
+
+CREATE VIEW LearnerProgress	AS
+Select e.Progress, u.Name , c.Title , c.Description , c.Category
+FROM Enrollments as e ,
+COURSES as c , Learners as l , Users as u
+where l.LearnerID = c.LearnerID
+
+
+
+
+
+
+CREATE VIEW RevenueSummary AS 
+SELECT sp.PlanType , sp.Price , i.Specialization
+from SubscriptionPlans as sp
+JOIN CourseSubscriptionPlans as csp on csp.ID = sp.SubscriptionPlansID
+JOIN Courses as c on c.CourseID = csp.CourseID
+JOIN InstructorCourses as ic on ic.CourseID = c.CourseID
+JOIN Instructors as i on i.InstructorID = ic.InstructorID
+
+
+
+
+
+
+
+
+
+Create proc EnrollLearner
+(@Progress Varchar(10),
+@Completion_Status Varchar(20),
+@LearnerID INT, 
+@CourseID INT,
+@InstructorID INT
+)AS
+begin
+Insert Into Enrollment(Progress ,Completion_Status,LearnerID, CourseID ,InstructorID)
+values(@Progress,@Completion_Status,@LearnerID,@CourseID,@InstructorID)
+end
+
+
+
+
+
+
+
+
+
+
+Create Proc AddNewCourse
+(@LearnerID int,
+@Title Varchar(50),
+@DESCRIPTION Varchar(max),
+@Category Varchar(50),
+@Level int,
+@Price float,
+@Discount float,
+@Total_Duration DateTime,
+@Status Varchar(50),
+@Rate float
+)As
+Begin
+Insert Into Course(LearnerID,Title,[DESCRIPTION],Category,[Level],Price,Discount,
+Total_Duration,[Status],Rate)
+values(@LearnerID,@Title,@DESCRIPTION,@Category,@Level,@Price,@Discount
+,@Total_Duration,@Status,@Rate)
+end
+
+
+
+
+
+
+CREATE Proc GetRevenueReport 
+(@StartDate DATE, 
+@EndDate DATE)as
+Begin
+SELECT c.CourseID, c.Title as CourseTitle, u.Name as InstructorName, 
+SUM(p.Amount) as TotalRevenue
+FROM Payments p
+JOIN Enrollments e on p.LearnerID = e.LearnerID
+JOIN Courses c on e.CourseID = c.CourseID
+JOIN InstructorCourses ic on c.CourseID = ic.CourseID
+JOIN Instructors i on ic.InstructorID = i.InstructorID
+JOIN Users u on i.UserID = u.UserID
+    Where p.PaymentDate BETWEEN @StartDate AND @EndDate
+    GROUP BY c.CourseID, c.Title, u.Name
+    ORDER BY TotalRevenue desc;
+end
+
+
+
+
+
+CREATE Proc ApplyDiscount 
+(@CourseID INT,
+@discount_percent INT) As
+BEGIN 
+    UPDATE Courses SET discount = @discount_percent WHERE CourseID = @CourseID; 
+END;

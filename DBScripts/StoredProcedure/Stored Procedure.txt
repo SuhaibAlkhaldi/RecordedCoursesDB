@@ -1,0 +1,71 @@
+1-Enroll Learner in Course:
+
+Create proc EnrollLearner
+(@Progress Varchar(10),
+@Completion_Status Varchar(20),
+@LearnerID INT, 
+@CourseID INT,
+@InstructorID INT
+)AS
+begin
+Insert Into Enrollment(Progress ,Completion_Status,LearnerID, CourseID ,InstructorID)
+values(@Progress,@Completion_Status,@LearnerID,@CourseID,@InstructorID)
+end
+
+
+2-Add a New Course
+
+Create Proc AddNewCourse
+(@LearnerID int,
+@Title Varchar(50),
+@DESCRIPTION Varchar(max),
+@Category Varchar(50),
+@Level int,
+@Price float,
+@Discount float,
+@Total_Duration DateTime,
+@Status Varchar(50),
+@Rate float
+)As
+Begin
+Insert Into Course(LearnerID,Title,[DESCRIPTION],Category,[Level],Price,Discount,
+Total_Duration,[Status],Rate)
+values(@LearnerID,@Title,@DESCRIPTION,@Category,@Level,@Price,@Discount
+,@Total_Duration,@Status,@Rate)
+end
+
+
+
+
+
+3-Generate Revenue Report
+CREATE Proc GetRevenueReport 
+(@StartDate DATE, 
+@EndDate DATE)as
+Begin
+SELECT c.CourseID, c.Title as CourseTitle, u.Name as InstructorName, 
+SUM(p.Amount) as TotalRevenue
+FROM Payments p
+JOIN Enrollments e on p.LearnerID = e.LearnerID
+JOIN Courses c on e.CourseID = c.CourseID
+JOIN InstructorCourses ic on c.CourseID = ic.CourseID
+JOIN Instructors i on ic.InstructorID = i.InstructorID
+JOIN Users u on i.UserID = u.UserID
+    Where p.PaymentDate BETWEEN @StartDate AND @EndDate
+    GROUP BY c.CourseID, c.Title, u.Name
+    ORDER BY TotalRevenue desc;
+end
+
+
+
+
+
+
+4-Manage Discounts:
+
+CREATE Proc ApplyDiscount 
+(@CourseID INT,
+@discount_percent INT) As
+BEGIN 
+    UPDATE Courses SET discount = @discount_percent WHERE CourseID = @CourseID; 
+END;

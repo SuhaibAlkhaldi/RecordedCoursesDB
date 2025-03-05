@@ -1,0 +1,240 @@
+-- 1)Create DataBase
+CREATE DATABASE RecordedCoursesSystem
+
+-- 2)Create Tables
+CREATE TABLE USERS (
+USERID INT PRIMARY KEY IDENTITY(1,1),
+[Name] VARCHAR(50) NOT NULL,
+EMAIL VARCHAR(100) UNIQUE CHECK (EMAIL LIKE '%_@_%._%'), 
+[Password] VARCHAR(16) NOT NULL CHECK (
+[Password] LIKE '%[A-Z]%'  
+AND [Password] LIKE '%[a-z]%' 
+AND [Password] LIKE '%[0-9]%'  
+AND [Password] LIKE '%[!@#$%^&*(),.?":{}|<>]%'  
+),
+BIO VARCHAR(MAX) NOT NULL,
+PhoneNumber VARCHAR(10) NOT NULL UNIQUE CHECK (PhoneNumber LIKE '07%' AND LEN(PhoneNumber) = 10),
+ProfileImage VARCHAR(MAX) NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0
+);
+
+
+CREATE TABLE LEARNERS
+(LearnerID INT PRIMARY KEY IDENTITY(1,1),
+USERID INT NOT NULL,
+Certification VARCHAR(50) not null,
+Nationality varchar(20) default 'Jordanian',
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (USERID) REFERENCES Users(USERID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Instructors
+(InstructorID INT PRIMARY KEY IDENTITY(1,1),
+USERID INT NOT NULL,
+Salary float not null,
+Rate Float not null check (Rate Between 1 AND 5),
+Specialization varchar(50) ,
+ExperienceYears float not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME ,
+CreatedBy VARCHAR(50),
+UpdatedBy VARCHAR(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (USERID) REFERENCES Users(USERID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Admins
+(AdminID INT PRIMARY KEY IDENTITY(1,1),
+[Name] varchar(50) not null,
+EMAIL VARCHAR(100) UNIQUE CHECK (EMAIL LIKE '%_@_%._%'), 
+[Password] VARCHAR(16) NOT NULL CHECK (
+[Password] LIKE '%[A-Z]%'  
+AND [Password] LIKE '%[a-z]%' 
+AND [Password] LIKE '%[0-9]%'  
+AND [Password] LIKE '%[!@#$%^&*(),.?":{}|<>]%'  
+),
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0
+);
+
+
+
+CREATE TABLE COURSES	
+(COURSEID INT PRIMARY KEY IDENTITY(1,1),
+LearnerID int not null,
+AdminID int not null,
+TITLE VARCHAR(50) NOT NULL,
+[DESCRIPTION] VARCHAR(MAX) NOT NULL,
+Category VARCHAR(50) NOT NULL,
+[Level] INT Check (Level > 0),
+Price FLOAT check (Price >100),
+Discount FLOAT Default 0,
+Total_Duration DateTime Default GetDate(),
+[Status] varchar(50) Default 'UnComplete',
+Rate Float not null check (Rate Between 1 AND 5),
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE,
+FOREIGN KEY (AdminID) REFERENCES Admins(AdminID) ON DELETE CASCADE
+);
+
+CREATE TABLE Reviews
+(ReviewID INT PRIMARY KEY IDENTITY(1,1),
+Rate Float not null CHECK (Rate >= 1 AND Rate <= 5),
+[Message] varchar(max) not null,
+ReviewDate DateTime default GETDATE(),
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ,
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) 
+);
+
+
+CREATE TABLE SubscriptionPlans
+(SubscriptionPlansID INT PRIMARY KEY IDENTITY(1,1),
+PlanType varchar(20) not null default 'Basic',
+Price float check (Price > 100),
+[Status] varchar(50) default 'Active',
+AdminID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (AdminID) REFERENCES Admins(AdminID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Enrollments
+(EnrollmentID INT PRIMARY KEY IDENTITY(1,1),
+Progress varchar(10) not null check (Progress Like '_%[%]'),
+EnrollmentDate DateTime Default GetDate(),
+Completion_Status varchar(20) default 'In Progress',
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID),
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) 
+);
+
+
+CREATE TABLE Payments
+(PaymentID INT PRIMARY KEY IDENTITY(1,1),
+PaymentDate DateTime not null Default GetDate(),
+IsPaid Bit not null Default 0,
+Amount Float Check (Amount > 0),
+LearnerID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE
+);
+
+
+CREATE TABLE Lessons
+(LessonID int Primary key Identity(1,1),
+VideoFile VARBINARY(255) UNIQUE,
+Title varchar(100) not null,
+Duration varchar(50) CHECK (Duration LIKE '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'),
+CourseID int not null,
+LearnerID int not null,
+InstructorID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID) ON DELETE CASCADE,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID),
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID)
+);
+
+
+
+
+CREATE TABLE BookMarks
+(BookMarkID int Primary key Identity(1,1),
+CreatedAt DateTime Default GetDate(),
+LearnerID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (LearnerID) REFERENCES Learners(LearnerID) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE InstructorCourses
+(ID int Primary Key Identity(1,1),
+InstructorID int not null,
+CourseID int not null,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (InstructorID) REFERENCES Instructors(InstructorID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+
+CREATE TABLE BookMarkCourses 
+(ID INT PRIMARY KEY IDENTITY(1,1),
+BookMarkID INT NOT NULL,
+CourseID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (BookMarkID) REFERENCES BookMarks(BookMarkID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+
+
+CREATE TABLE CourseSubscriptionPlans 
+(ID INT PRIMARY KEY IDENTITY(1,1),
+SubscriptionPlansID INT NOT NULL,
+CourseID INT NOT NULL,
+CreationDate DATETIME DEFAULT GETDATE(),
+UpdateDate DATETIME,
+CreatedBy varchar(50),
+UpdateBy varchar(50),
+ISACTIVE bit DEFAULT 0,
+FOREIGN KEY (SubscriptionPlansID) REFERENCES SubscriptionPlans(SubscriptionPlansID) ON DELETE CASCADE,
+FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
